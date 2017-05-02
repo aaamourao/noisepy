@@ -23,7 +23,7 @@
 import imageio
 import numpy
 
-colorChannel = {'r' : 2, 'g' : 1, 'b' : 3}
+colorChannel = {'r' : 0, 'g' : 1, 'b' : 2}
 
 def amplify(gain, channels, signal):
     # Just a simple amp of each plane
@@ -41,13 +41,18 @@ def main():
     parser = argparse.ArgumentParser()
 
     # Load arguments
-    parser.add_argument("-a", "--ampgain", help="Amplifier gain", type=float)
-    parser.add_argument("-c", "--colors", help="Color plane(s): RGB")
+    parser.add_argument("-a", "--ampgain", type=float, help="Amplifier gain")
+    parser.add_argument("-c", "--colors", nargs='+', choices=['r', 'g', 'b'],
+            help="Color plane(s): RGB")
     parser.add_argument("input_path", help="Target image path")
     parser.add_argument("output_path", help="Output file path")
 
     # Parse arguments
     setup = parser.parse_args()
+
+    # Check if some op was requested
+    if not setup.ampgain or not setup.colors:
+        parser.error("--ampgain and --colors values should be specified")
 
     # Check if input image exists and has permission
     try:
@@ -62,7 +67,7 @@ def main():
         output = amplify(setup.ampgain, setup.colors, signal)
 
         # Write the output image on target file
-        imageio.imwrite(outPath, output, 'jpg')
+        imageio.imwrite(setup.output_path, output, 'jpg')
     except ValueError as message:
         print(message)
 
