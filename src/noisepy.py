@@ -1,9 +1,9 @@
 #!/usr/bin/python3
-#   ____ _     ___ _____ ____ _   _      _      ____    _____     _  _
-#  / ___| |   |_ _|_   _/ ___| | | |    / \    |  _ \  |_   _|  _| || |
-# | |  _| |    | |  | || |   | |_| |   / _ \   | |_) |   | |   |_  ..  _|
-# | |_| | |___ | |  | || |___|  _  |  / ___ \  |  _ <    | |   |_      _|
-#  \____|_____|___| |_| \____|_| |_| /_/   \_\ |_| \_\   |_|     |_||_|
+#     ____ _     ___ _____ ____ _   _      _      ____    _____     _  _
+#    / ___| |   |_ _|_   _/ ___| | | |    / \    |  _ \  |_   _|  _| || |
+#   | |  _| |    | |  | || |   | |_| |   / _ \   | |_) |   | |   |_  ..  _|
+#   | |_| | |___ | |  | || |___|  _  |  / ___ \  |  _ <    | |   |_      _|
+#    \____|_____|___| |_| \____|_| |_| /_/   \_\ |_| \_\   |_|     |_||_|
 #
 # by
 #      ___          ___         _____         ___          ___          ___
@@ -21,7 +21,6 @@
 # email: madc0w@protonmail.ch
 #
 import imageio
-import numpy
 
 colorChannel = {'r' : 0, 'g' : 1, 'b' : 2}
 
@@ -38,7 +37,11 @@ def main():
     import argparse
 
     # Create argument parser object
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+            description='Noisepy: Edit images as 3 channels signals.',
+            epilog='A glitch art Python 3 module:' \
+                    ' ==noisepy== by __madc0w__'
+            )
 
     # Load arguments
     parser.add_argument("-a", "--ampgain", type=float, help="Amplifier gain")
