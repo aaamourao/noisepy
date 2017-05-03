@@ -44,14 +44,48 @@ transformation methods, which can be loaded with another python
 tools. Thus, it will be part of a broader development-creative environment
 for glitch artists
 
-# Alpha "build"
+# Noisepy Setup
+
+Check if **Python 3.5** is installed on your system. *Virtualenv* will
+install the last *Python 3.5* version available, and noisepy should
+work smoothly.
+
+If **Python 3.5** is not installed and you can't or don't want to install
+it, you should specify that you want **Python 3.5** on the virtualenv
+creation.
+
 
 ```bash
-pip install -r requirements.txt
-chmod +x noisepy.py
+$ python3 -m venv noisepy-env
+$ . noisepy-env/bin/activate
+$ pip install -r requirements.txt
+$ chmod +x src/noisepy.py
 ```
 
+You only need to do the last step, `chmod +x`, if you want to use noisepy
+from the command line or inside *bash scrips*.
+
 # Usage
+
+The following image will be noisepy-ed to illustrate the usage example:
+
+![Source Image: images/veneza.jpg](/images/veneza.jpg)
+
+Amplifying the green channel by a factor of `2` from the command line:
+
+```
+$ cd src/
+$ ./noisepy -c g -a 2 ../images/veneza.jpg ../glitch/glitched-images.jpg
+```
+
+![Output Image: glitched/veneza.jpg](/glitched/glitched-veneza.jpg)
+
+## Help output
+
+Help output were developed using argparse and it only outputs
+implemented features. Thus, it should be incremented in each step.
+So far, only amplify was added to the module and help, `-h or --help`,
+output looks like:
 
 ```bash
 usage: noisepy.py [-h] [-a AMPGAIN] [-c {r,g,b} [{r,g,b} ...]]
