@@ -1,3 +1,4 @@
+
 ```
      ___          ___                   ___          ___          ___
     /__/\        /  /\      ___        /  /\        /  /\        /  /\    ___
@@ -82,7 +83,7 @@ $ ./noisepy -c g -a 2 ../images/veneza.jpg ../glitch/glitched-images.jpg
 
 ## Help output
 
-Help output were developed using argparse and it only outputs
+The **Help output** was developed using argparse and it only outputs
 implemented features. Thus, it should be incremented in each step.
 So far, only amplify was added to the module and help, `-h or --help`,
 output looks like:
