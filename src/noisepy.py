@@ -57,7 +57,9 @@ def main():
     parser = argparse.ArgumentParser(
             description='Noisepy: Edit images as 3 channels signals.',
             epilog='A glitch art Python 3 module:' \
-                    ' ==noisepy== by __madc0w__'
+                    ' ==noisepy== by __madc0w__\n' \
+                    'Distributed under GNU GPL v3.' \
+                    ' Check COPYING file for more information'
             )
 
     # Load arguments
