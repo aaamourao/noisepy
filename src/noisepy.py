@@ -55,19 +55,23 @@ def main():
 
     # Create argument parser object
     parser = argparse.ArgumentParser(
-            description='Noisepy: Edit images as 3 channels signals.',
+            description='Noisepy: Edit images as a 3 channels signal',
             epilog='A Glitch Art Python 3 module:' \
                     ' ===noisepy=== by ___madc0w___ !' \
                     ' Distributed under GNU GPL v3.' \
                     ' Check COPYING file for more information'
             )
+    # Create sub-parsers for sub-commands
+    subparsers = parser.add_subparsers(help='sub-command help')
 
-    # Load arguments
-    parser.add_argument("-a", "--ampgain", type=float, help="Amplifier gain")
-    parser.add_argument("-c", "--colors", nargs='+', choices=['r', 'g', 'b'],
-            help="Color plane(s): RGB")
-    parser.add_argument("input_path", help="Target image path")
-    parser.add_argument("output_path", help="Output file path")
+    # Create parser for "amplifier" command
+    parser_amp = subparsers.add_parser("amplifier", help="Select amplifier" \
+            " signal edition")
+    parser_amp.add_argument("-a", "--ampgain", type=float, help="Amplifier gain")
+    parser_amp.add_argument("-c", "--colors", nargs='+', choices=['r', 'g', 'b'],
+            help="Color plane(s) that will be edited: RGB")
+    parser_amp.add_argument("input_path", help="Target image path")
+    parser_amp.add_argument("output_path", help="Output file path")
 
     # Parse arguments
     setup = parser.parse_args()
