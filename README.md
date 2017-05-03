@@ -85,8 +85,8 @@ $ ./noisepy -c g -a 2 ../images/veneza.jpg ../glitch/glitched-images.jpg
 
 The **Help output** was developed using argparse and it only outputs
 implemented features. Thus, it should be incremented in each step.
-So far, only amplify was added to the module and help, `-h or --help`,
-output looks like:
+So far, only amplify was added to the module, so the help,
+`-h or --help`, output looks like:
 
 ```bash
 usage: noisepy.py [-h] [-a AMPGAIN] [-c {r,g,b} [{r,g,b} ...]]
@@ -103,3 +103,9 @@ optional arguments:
   -c {r,g,b} [{r,g,b} ...], --colors {r,g,b} [{r,g,b} ...]
                         Color plane(s): RGB
 ```
+
+# License
+
+All the photos in `/images` and `/glitched` were shot and edited
+by me and they are distributed under the same copyleft license
+than the code, **GPL**.
