@@ -40,12 +40,19 @@
 import imageio
 
 colorChannel = {'r' : 0, 'g' : 1, 'b' : 2}
+maxColorValue = 255
 
 def amplify(gain, channels, signal):
+    # Copy input signal
+    out = signal
     # Just a simple amp of each plane
     for ch in channels:
-        signal[:,:,colorChannel[ch]] = gain*signal[:,:,colorChannel[ch]]
-    return signal
+        out[:,:,colorChannel[ch]] = gain*signal[:,:,colorChannel[ch]]
+    return out
+
+def invert(channels, signal):
+    out = maxColorValue - signal
+    return out
 
 # Manual glitching interface: Check user inputs, open,
 # create, and save images as numpy arrays...
@@ -62,7 +69,7 @@ def main():
                     ' Check COPYING file for more information'
             )
     # Create sub-parsers for sub-commands
-    subparsers = parser.add_subparsers(help='sub-command help')
+    subparsers = parser.add_subparsers(help='sub-command help', dest="command")
 
     # Create parser for "amplifier" command
     parser_amp = subparsers.add_parser("amplifier", help="Select amplifier" \
@@ -73,12 +80,22 @@ def main():
     parser_amp.add_argument("input_path", help="Target image path")
     parser_amp.add_argument("output_path", help="Output file path")
 
+    parser_inv = subparsers.add_parser("inversor", help="Select inversor" \
+            " signal edition")
+    parser_inv.add_argument("-c", "--colors", nargs='+', choices=['r', 'g', 'b'],
+            help="Color plane(s) that will be edited: RGB")
+    parser_inv.add_argument("input_path", help="Target image path")
+    parser_inv.add_argument("output_path", help="Output file path")
+
     # Parse arguments
     setup = parser.parse_args()
-
-    # Check if some op was requested
-    if not setup.ampgain or not setup.colors:
-        parser.error("--ampgain and --colors values should be specified")
+    # Check if parameters were specified
+    if not setup.colors:
+        parser.error("--colors should be specified")
+    if setup.command == 'amplifier':
+        # Check if some op was requested
+        if not setup.ampgain:
+            parser.error("--ampgain and --colors values should be specified")
 
     # Check if input image exists and has permission
     try:
@@ -90,7 +107,10 @@ def main():
         # an element for each picture. Each element is a 3 dimensional
         # vector. It will be treated it as a 3 channels signal.
         signal = imageio.imread(setup.input_path)
-        output = amplify(setup.ampgain, setup.colors, signal)
+        if setup.command == 'amplifier':
+            output = amplify(setup.ampgain, setup.colors, signal)
+        elif setup.command == 'inversor':
+            output = invert(setup.colors, signal)
 
         # Write the output image on target file
         imageio.imwrite(setup.output_path, output, 'jpg')
