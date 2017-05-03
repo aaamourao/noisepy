@@ -4,3 +4,6 @@
 
 # Virtual environment directory
 noisepy-env
+
+# Python cache files
+__pycache__
