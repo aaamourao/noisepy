@@ -37,86 +37,130 @@
 #  You should have received a copy of the GNU General Public License along
 #  with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import os.path
+import argparse
 import imageio
+import glitchefx
 
+"""
+colorChannel dic constant:
+Color dictionary for translating RGB to
+the numpy array position
+"""
 colorChannel = {'r' : 0, 'g' : 1, 'b' : 2}
+"""
+maxColorValue int constant
+The maximum color value which each pixel can assume.
+"""
 maxColorValue = 255
 
-def amplify(gain, channels, signal):
-    # Copy input signal
-    out = signal
-    # Just a simple amp of each plane
-    for ch in channels:
-        out[:,:,colorChannel[ch]] = gain*signal[:,:,colorChannel[ch]]
-    return out
+class NoisePy(object):
+    """
+    Noisepy Class:
+     * Implemented using the command pattern
+     * Represents an edited image and the effects
+    """
+    def __init__(self):
+        """
+        Manual glitching interface: Check user inputs, open,
+        create, and save images as numpy arrays...
+        """
+        # Create argument parser object
+        parser = argparse.ArgumentParser(
+                description='Noisepy: Edit images as a 3 channels signal',
+                epilog='A Glitch Art Python 3 module:' \
+                        ' ===noisepy=== by ___madc0w___ !' \
+                        ' Distributed under GNU GPL v3.' \
+                        ' Check COPYING file for more information')
+        # Check if the requested command exists
+        parser.add_argument('command', help='Subcommand to run')
+        args = parser.parse_args(sys.args[1:2])
+        if not hasattr(self, args.command):
+            print 'Unrecognized command'
+            parser.print_help()
+            exit(1)
+        # Call the requested effect
+        getattr(self, args.command)()
 
-def invert(channels, signal):
-    out = maxColorValue - signal
-    return out
+    def effect(func):
+        """
+        Effect is a decorating method which implements the
+        common steps that every effect should do.
+        """
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            # Parse arguments
+            setup = parser.parse_args()
+            # Check if input image exists and has permission
+            try:
+                if not os.path.isfile(setup.input_path):
+                    raise ValueError('Could not access image file. ' \
+                            'If it exists, check its permissions')
+            except ValueError as message:
+                print(message)
+            # Check if parameters were specified
+            if not setup.colors:
+                setup.colors = 'rgb'
 
-# Manual glitching interface: Check user inputs, open,
-# create, and save images as numpy arrays...
-def main():
-    import os.path
-    import argparse
+            # Load image in a numpy array. It will contain a matrix with
+            # an element for each picture. Each element is a 3 dimensional
+            # vector. It will be treated it as a 3 channels signal.
+            signal = imageio.imread(setup.input_path)
+            # Compute the requested signal processing
+            processed = func(*args, **kwargs)
+            # Write the output image on target file
+            imageio.imwrite(setup.output_path, output, 'jpg')
 
-    # Create argument parser object
-    parser = argparse.ArgumentParser(
-            description='Noisepy: Edit images as a 3 channels signal',
-            epilog='A Glitch Art Python 3 module:' \
-                    ' ===noisepy=== by ___madc0w___ !' \
-                    ' Distributed under GNU GPL v3.' \
-                    ' Check COPYING file for more information'
-            )
-    # Create sub-parsers for sub-commands
-    subparsers = parser.add_subparsers(help='sub-command help', dest="command")
+    @effect
+    def amplifier(self):
+        """
+        Amplifier implements the amplify processing on a
+        3 channels signal, s[R, G, B], when called as a command.
+        So it sets its help parameter table and check if they were
+        passed corretly.
+        """
+        # Create sub-parsers for sub-commands
+        subparsers = parser.add_subparsers(help='sub-command help',
+                dest="command")
 
-    # Create parser for "amplifier" command
-    parser_amp = subparsers.add_parser("amplifier", help="Select amplifier" \
-            " signal edition")
-    parser_amp.add_argument("-a", "--ampgain", type=float, help="Amplifier gain")
-    parser_amp.add_argument("-c", "--colors", nargs='+', choices=['r', 'g', 'b'],
-            help="Color plane(s) that will be edited: RGB")
-    parser_amp.add_argument("input_path", help="Target image path")
-    parser_amp.add_argument("output_path", help="Output file path")
+        # Create parser for "amplifier" command
+        parser_amp = subparsers.add_parser("amplifier", \
+                help="Select amplifier signal edition")
+        parser_amp.add_argument("-a", "--ampgain", type=float,
+                help="Amplifier gain")
+        parser_amp.add_argument("-c", "--colors", nargs='+',
+                choices=['r', 'g', 'b'],
+                help="Color plane(s) that will be edited: RGB")
+        parser_amp.add_argument("input_path", help="Target image path")
+        parser_amp.add_argument("output_path", help="Output file path")
 
-    parser_inv = subparsers.add_parser("inversor", help="Select inversor" \
-            " signal edition")
-    parser_inv.add_argument("-c", "--colors", nargs='+', choices=['r', 'g', 'b'],
-            help="Color plane(s) that will be edited: RGB")
-    parser_inv.add_argument("input_path", help="Target image path")
-    parser_inv.add_argument("output_path", help="Output file path")
-
-    # Parse arguments
-    setup = parser.parse_args()
-    # Check if parameters were specified
-    if not setup.colors:
-        parser.error("--colors should be specified")
-    if setup.command == 'amplifier':
-        # Check if some op was requested
+        # Check if there are required parameters
         if not setup.ampgain:
-            parser.error("--ampgain and --colors values should be specified")
+            parser.error("--ampgain is required")
 
-    # Check if input image exists and has permission
-    try:
-        if not os.path.isfile(setup.input_path):
-            raise ValueError('Could not access image file. ' \
-                    'If it exists, check its permissions')
+    @effect
+    def inversor(self):
+        """
+        Inversor implements a simple color inversion when called as
+        a command. It checks if the parameters were passed corretly
+        and feeds its help parameter table.
+        """
+        parser_inv = subparsers.add_parser("inversor", help="Select inversor" \
+                " signal edition")
+        parser_inv.add_argument("-c", "--colors", nargs='+',
+                choices=['r', 'g', 'b'],
+                help="Color plane(s) that will be edited: RGB")
+        parser_inv.add_argument("input_path", help="Target image path")
+        parser_inv.add_argument("output_path", help="Output file path")
 
-        # Load image in a numpy array. It will contain a matrix with
-        # an element for each picture. Each element is a 3 dimensional
-        # vector. It will be treated it as a 3 channels signal.
-        signal = imageio.imread(setup.input_path)
+    def preProcessor(self):
         if setup.command == 'amplifier':
             output = amplify(setup.ampgain, setup.colors, signal)
         elif setup.command == 'inversor':
             output = invert(setup.colors, signal)
 
-        # Write the output image on target file
-        imageio.imwrite(setup.output_path, output, 'jpg')
-    except ValueError as message:
-        print(message)
-
-# Executing in a terminal
 if __name__ == "__main__":
-    main()
+    """
+    When executed from the command line
+    """
+    NoisePy()
