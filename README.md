@@ -45,6 +45,11 @@ transformation methods, which can be loaded with another python
 tools. Thus, it will be part of a broader development-creative environment
 for glitch artists
 
+> May the 4th be with you:
+> I'm migrating the code to a new archtecture, and it is not completed.
+> However, I commited for registering each step. So the last changeset
+> is broken.
+
 # Noisepy Setup
 
 Check if **Python 3.5** is installed on your system. *Virtualenv* will
