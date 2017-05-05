@@ -38,6 +38,18 @@
 #
 import imageio
 
+"""
+colorChannel dic constant:
+Color dictionary for translating RGB to
+the numpy array position
+"""
+colorChannel = {'r' : 0, 'g' : 1, 'b' : 2}
+"""
+maxColorValue int constant
+The maximum color value which each pixel can assume.
+"""
+maxColorValue = 255
+
 def amplify(gain, channels, signal):
     # Copy input signal
     out = signal
