@@ -167,6 +167,15 @@ class EffxHist:
             exit(1)
         return True
 
+    def save(self, path='./glitched.jpg'):
+        """
+        EffxHist:save(): Saves ignal with applied effects as an image file.
+        If path is not passed, the default, ./glitched.jpg, will be used.
+        """
+        self.currpath = path
+        imageio.imwrite(path, self.signal)
+        return True
+
     def undo(self):
         """
         EffxHist:undo(): Undo the command queue, checking if each
@@ -180,6 +189,16 @@ class EffxHist:
             exit(1)
         return True
 
+effxdic = {}
+def regeffx(effx):
+    """
+    regeffx: Decorator for registering effects which can be created by
+    an EffxHist instance by saving it on a dictionary.
+    """
+    effxdic[effx.__name__.lower()] = effx
+    return effx
+
+@regeffx
 class Amp:
     """
     Amplifier class: Implements the **amplify** effect, a **Concrete command**,
@@ -219,6 +238,7 @@ class Amp:
                     self.signal[:,:,colorChannel[ch]]/self.gain
         return True
 
+@regeffx
 class Inv:
     """
     Inversor class: Implements the **invert** effect, a concrete command,
@@ -244,3 +264,19 @@ class Inv:
         """
         self.execute()
         return True
+
+@regeffx
+class GrayScale:
+    """
+    GrayScale class: set the image to gray scale color set
+    """
+    def __init__(self, signal):
+        self.signal = signal
+
+    def execute(self):
+        self.recover = self.signal[:,:,1:2]
+        self.signal = self.signal[:,:,0]
+        return True
+
+    def undo(self):
+        self.signal[:,:,1:2] = self.recover
