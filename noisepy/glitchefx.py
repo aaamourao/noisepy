@@ -195,7 +195,7 @@ def regeffx(effx):
     regeffx: Decorator for registering effects which can be created by
     an EffxHist instance by saving it on a dictionary.
     """
-    effxdic[effx.__name__.lower()] = effx
+    effxdic[effx.__name__] = effx
     return effx
 
 @regeffx
@@ -244,18 +244,21 @@ class Inv:
     Inversor class: Implements the **invert** effect, a concrete command,
     following the Command Design Pattern.
     """
-    def __init__(self, signal):
+    def __init__(self, signal, channels):
         """
         Just set Inv.signal if it wasn't done before
         """
         self.signal = signal
+        self.chs = channels
 
     def execute(self):
         """
         Inv.execute() concrete effect command: invert **channels** values:
             maxColorValue(==255) - signal[:,:,channel]
         """
-        self.signal = maxColorValue - self.signal
+        for ch in self.chs:
+            self.signal[:,:,colorChannel[ch]] = \
+                    maxColorValue - self.signal[:,:,colorChannel[ch]]
         return True
 
     def undo(self):
@@ -271,12 +274,24 @@ class GrayScale:
     GrayScale class: set the image to gray scale color set
     """
     def __init__(self, signal):
+        """
+        Saves a reference to the signal
+        """
         self.signal = signal
 
     def execute(self):
+        """
+        Removes green and blue color planes and saves
+        that for an eventual undo
+        """
         self.recover = self.signal[:,:,1:2]
         self.signal = self.signal[:,:,0]
         return True
 
     def undo(self):
+        """
+        Add the previously saved color planes to
+        the signal
+        """
         self.signal[:,:,1:2] = self.recover
+        return True
