@@ -61,6 +61,7 @@ class EffxHist:
     abstract method to define an interface. Thus, EffxHist checks on runtime
     if the given object is implemented concrete command.
     """
+
     def __init__(self, image, *, reverse=True):
         """
         _glitchin: every instance of EffxHist has its own glitch image
@@ -70,10 +71,14 @@ class EffxHist:
         path to the file
         """
         try:
+            """
+            signal: static variable which holds the image represented as
+            a 3 channels signal, an imageio object
+            """
             if isinstance(image, imageio.core.util.Image):
-                self._glitchin = image
+                self.signal = image
             elif isinstance(image, str):
-                self._glitchin = imageio.imread(image)
+                self.signal = imageio.imread(image)
             else:
                 raise AttributeError("'image' input is not valid")
         except AttributeError as error:
@@ -110,6 +115,7 @@ class EffxHist:
         """
         EffxHist:enqueue(): Append effect to the queue.
         """
+        # TODO: It is possible to create effect object when enqueue-ing
         try:
             if not EffxHist.iseffect(effect, reverse=self._reverse):
                 raise AttributeError("Only effects should be enqueued")
@@ -119,11 +125,39 @@ class EffxHist:
             exit(1)
         return True
 
-    def execute(self):
+    def execute(self, effect, **setup):
         """
-        EffxHist:execute(): Executes all the effects on the command queue.
+        EffxHist:execute(): add effect and execute it
+        """
+        try:
+            if EffxHist.iseffect(effect, reverse=self._reverse):
+                newEffect = effect
+            elif isinstance(effect, str):
+                module = __import__(module_name)
+                effectClass_ = getattr(module, effect)
+
+                if not effectClass:
+                    raise ValueError("Effect not found:", effect)
+
+                # TODO: Strip setup
+                newEffect = effectClass(setup)
+            else:
+                raise TypeError("Effect should be string containing the" \
+                        "effect name, or an effect object")
+            newEffect.execute()
+            self._cmdqueue.append(effect)
+        except:
+            # TODO: catch the correct exceptions
+            exit(1)
+        return True
+
+
+    def executeQueue(self):
+        """
+        EffxHist:executeQueue(): Executes all the effects on the command queue.
         If some object doesn't has a execute method implemented, raises error.
         """
+        # TODO: execute the non applyed effects from the queue
         try:
             for effect in self._cmdqueue:
                 effect.execute()
@@ -132,6 +166,7 @@ class EffxHist:
                     "isn't an effect: It doesn't implement a concrete command")
             # TODO: Undo all the effects that are already done
             exit(1)
+        return True
 
     def undo(self):
         """
@@ -144,89 +179,69 @@ class EffxHist:
             print('Effect ', effect.__class__.__name__, 'cannot be undone')
             self._cmdqueue.append(effect)
             exit(1)
+        return True
 
 class Amp:
     """
     Amplifier class: Implements the **amplify** effect, a **Concrete command**,
     following the Command Design Pattern.
     """
-
-    """
-    Reference of the target image, which will be handled as a 3 channels signal.
-    """
-    _signal = None
-
-    def __init__(self, pimage, setup):
+    def __init__(self, signal, gain, channels):
         """
         Create Amplifier effect:
-            pimage = image object which is being edited
+            signal = image array which is being edited
             setup = gain and color(s) channel(s) [rgb]
         """
-        self.setup = setup
-        # TODO: Slice setup
         try:
-            self.channels = 'r' # TODO: just for devel
-            self.gain = 2 # TODO: just for devel
+            self.channels = channels
+            self.gain = gain
         except:
             print('Invalid Parameters')
             exit(1)
-
-        # Check if pimage is a reference to a imageio object
-        if not isinstance(pimage, imageio.core.util.Image):
-            raise AttributeError('pimage should be a reference to', \
-                    ' ndarray (imageio)')
-        # Signal is a reference of pimage
-        if Amp._signal == None:
-            Amp._signal = pimage
+        # Reference to image signal
+        self._signal = signal
 
     def execute(self):
         """
         Amp.execute() concrete effect command: amplify **channels**
         by a factor of **gain**
         """
-        # Just a simple amp of each plane
         for ch in self.channels:
-            Amp._signal[:,:,colorChannel[ch]] = \
-                    self.gain*Amp._signal[:,:,colorChannel[ch]]
-        return Amp._signal
+            self._signal[:,:,colorChannel[ch]] = \
+                    self.gain*self._signal[:,:,colorChannel[ch]]
+        return True
 
     def undo(self):
         """
         Amp.undo(): remove the gain added to the signal
         """
         for ch in self.channels:
-            Amp._signal[:,:,colorChannel[ch]] = \
-                    Amp._signal[:,:,colorChannel[ch]]/self.gain
-        return Amp._signal
+            self._signal[:,:,colorChannel[ch]] = \
+                    self._signal[:,:,colorChannel[ch]]/self.gain
+        return True
 
 class Inv:
     """
     Inversor class: Implements the **invert** effect, a concrete command,
     following the Command Design Pattern.
     """
-
-    """
-    Reference of the target image, which will be handled as a 3 channels signal.
-    """
-    _signal = None
-
-    def __init__(self, pimage):
+    def __init__(self, signal):
         """
         Just set Inv._signal if it wasn't done before
         """
-        if Inv._signal == None:
-            Inv._signal = pimage
+        self._signal = signal
 
     def execute(self):
         """
-        Inv.execute() concrete effect command: invert **channels** values
+        Inv.execute() concrete effect command: invert **channels** values:
+            maxColorValue(==255) - signal[:,:,channel]
         """
-        Inv._signal = maxColorValue - Inv._signal
-
-        return Inv._signal
+        self._signal = maxColorValue - self._signal
+        return True
 
     def undo(self):
         """
-        Amp.undo(): remove the gain added to the signal
+        Inv.undo(): undo the invertion by applying it again
         """
-        return self.execute()
+        self.execute()
+        return True
