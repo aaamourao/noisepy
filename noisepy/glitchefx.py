@@ -84,7 +84,6 @@ class EffxHist:
         except AttributeError as error:
             print('Attribute Error:', error)
             exit(1)
-
         """
         _cmdqueue: every instance of EffxHist has its own command queue.
         """
@@ -199,7 +198,7 @@ class Amp:
             print('Invalid Parameters')
             exit(1)
         # Reference to image signal
-        self._signal = signal
+        self.signal = signal
 
     def execute(self):
         """
@@ -207,8 +206,8 @@ class Amp:
         by a factor of **gain**
         """
         for ch in self.channels:
-            self._signal[:,:,colorChannel[ch]] = \
-                    self.gain*self._signal[:,:,colorChannel[ch]]
+            self.signal[:,:,colorChannel[ch]] = \
+                    self.gain*self.signal[:,:,colorChannel[ch]]
         return True
 
     def undo(self):
@@ -216,8 +215,8 @@ class Amp:
         Amp.undo(): remove the gain added to the signal
         """
         for ch in self.channels:
-            self._signal[:,:,colorChannel[ch]] = \
-                    self._signal[:,:,colorChannel[ch]]/self.gain
+            self.signal[:,:,colorChannel[ch]] = \
+                    self.signal[:,:,colorChannel[ch]]/self.gain
         return True
 
 class Inv:
@@ -227,16 +226,16 @@ class Inv:
     """
     def __init__(self, signal):
         """
-        Just set Inv._signal if it wasn't done before
+        Just set Inv.signal if it wasn't done before
         """
-        self._signal = signal
+        self.signal = signal
 
     def execute(self):
         """
         Inv.execute() concrete effect command: invert **channels** values:
             maxColorValue(==255) - signal[:,:,channel]
         """
-        self._signal = maxColorValue - self._signal
+        self.signal = maxColorValue - self.signal
         return True
 
     def undo(self):
