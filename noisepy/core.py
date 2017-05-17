@@ -49,8 +49,10 @@ maxColorValue = 255
 
 """
 imageio: lib for handling images as numpy arrays
+numpy: for complementary array operations
 """
 import imageio
+import numpy
 
 class EffxHist:
     """
@@ -147,10 +149,7 @@ class EffxHist:
             else:
                 raise TypeError("Effect should be string containing the" \
                         "effect name, or an effect object")
-            if isinstance(effxobj, GrayScale):
-                self.signal = effxobj.execute()
-            else:
-                effxobj.execute()
+            effxobj.execute()
             self.__cmdqueue.append(effxobj)
         except TypeError as error:
             print(error)
@@ -181,7 +180,13 @@ class EffxHist:
         """
         self.currpath = path
         try:
-            imageio.imwrite(path, self.signal)
+            savingSignal = self.signal
+            if numpy.all(self.signal[:,:,1:3]==0):
+                """
+                GrayScale only has one channel
+                """
+                savingSignal = self.signal[:,:,0]
+            imageio.imwrite(path, savingSignal)
         except Exception as error:
             print('Could not save image')
             print(error)
@@ -315,14 +320,16 @@ class GrayScale:
         that for an eventual undo
         Returns the signal, due to new reference
         """
-        self.recover = self.signal[:,:,1:2]
-        self.signal = self.signal[:,:,0]
-        return self.signal
+        self.recover = self.signal[:,:,1:3].copy()
+        self.signal[:,:,0] = 0.299*self.signal[:,:,0] +\
+                0.587*self.signal[:,:,1] + 0.114*self.signal[:,:,2]
+        self.signal[:,:,1:3] = 0
+        return True
 
     def undo(self):
         """
         Add the previously saved color planes to
         the signal
         """
-        self.signal[:,:,1:2] = self.recover
+        self.signal[:,:,1:3] = self.recover[1:3]
         return True
