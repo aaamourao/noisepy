@@ -82,17 +82,22 @@ class EffxHist:
             else:
                 raise AttributeError("'image' input is not valid")
         except AttributeError as error:
-            print('Attribute Error:', error)
-            exit(1)
+            print('Not valid image input')
+            print(error)
+            return
+        except IOError as error:
+            print('Error when opening image:', image)
+            print(error)
+            return
         """
-        _cmdqueue: every instance of EffxHist has its own command queue.
+        __cmdqueue: every instance of EffxHist has its own command queue.
         """
-        self._cmdqueue = list()
+        self.__cmdqueue = list()
         """
-        _reverse: Holds a boolean value. If 'True', it is mandatory to
+        __reverse: Holds a boolean value. If 'True', it is mandatory to
         all effects to implement the 'undo' operation
         """
-        self._reverse = reverse
+        self.__reverse = reverse
 
     @staticmethod
     def iseffect(defendant, *, reverse=True):
@@ -106,22 +111,25 @@ class EffxHist:
             if reverse and not hasattr(defendant, 'undo'):
                 raise NotImplementedError("no 'undo' operation implemented")
         except NotImplementedError as message:
-            print(defendant.__class__.__name__, ' not an real effect:', message)
             return False
         return True
 
-    def enqueue(self, effect):
+    def enqueue(self, effect, **setup):
         """
         EffxHist:enqueue(): Append effect to the queue.
         """
-        # TODO: It is possible to create effect object when enqueue-ing
         try:
-            if not EffxHist.iseffect(effect, reverse=self._reverse):
+            if isinstance(effect, str):
+                print(setup)
+                self.__cmdqueue.append(effxdic[effect](self.signal, **setup))
+            elif not EffxHist.iseffect(effect, reverse=self.__reverse):
                 raise AttributeError("Only effects should be enqueued")
-            self._cmdqueue.append(effect)
-        except AttributeError as message:
-            print('Could not enqueue:', message)
-            exit(1)
+            else:
+                self.__cmdqueue.append(effect)
+        except AttributeError as error:
+            print('Could not enqueue effect')
+            print('AttributeError:', error)
+            return False
         return True
 
     def execute(self, effect, **setup):
@@ -129,25 +137,24 @@ class EffxHist:
         EffxHist:execute(): add effect and execute it
         """
         try:
-            if EffxHist.iseffect(effect, reverse=self._reverse):
-                newEffect = effect
+            if EffxHist.iseffect(effect, reverse=self.__reverse):
+                effxobj = effect
             elif isinstance(effect, str):
-                module = __import__(module_name)
-                effectClass_ = getattr(module, effect)
-
-                if not effectClass:
-                    raise ValueError("Effect not found:", effect)
-
-                # TODO: Strip setup
-                newEffect = effectClass(setup)
+                if setup:
+                    effxobj = effxdic[effect](self.signal, setup)
+                else:
+                    effxobj = effxdic[effect](self.signal)
             else:
                 raise TypeError("Effect should be string containing the" \
                         "effect name, or an effect object")
-            newEffect.execute()
-            self._cmdqueue.append(effect)
-        except:
-            # TODO: catch the correct exceptions
-            exit(1)
+            if isinstance(effxobj, GrayScale):
+                self.signal = effxobj.execute()
+            else:
+                effxobj.execute()
+            self.__cmdqueue.append(effxobj)
+        except TypeError as error:
+            print(error)
+            return False
         return True
 
 
@@ -158,13 +165,13 @@ class EffxHist:
         """
         # TODO: execute the non applyed effects from the queue
         try:
-            for effect in self._cmdqueue:
+            for effect in self.__cmdqueue:
                 effect.execute()
         except NotImplementedError:
+            # TODO: Undo all the effects that are already done
             print('Effect', effect.__class__.__name__, \
                     "isn't an effect: It doesn't implement a concrete command")
-            # TODO: Undo all the effects that are already done
-            exit(1)
+            return False
         return True
 
     def save(self, path='./glitched.jpg'):
@@ -173,20 +180,26 @@ class EffxHist:
         If path is not passed, the default, ./glitched.jpg, will be used.
         """
         self.currpath = path
-        imageio.imwrite(path, self.signal)
+        try:
+            imageio.imwrite(path, self.signal)
+        except Exception as error:
+            print('Could not save image')
+            print(error)
+            return False
         return True
 
     def undo(self):
         """
-        EffxHist:undo(): Undo the command queue, checking if each
-        element has the undo operation implemented
+        EffxHist:undo(): Undo the the last executed command on the queue,
+        checking if each element has the undo operation implemented
         """
         try:
-            effect = self._cmdqueue.pop().undo()
-        except NotImplementedError:
+            effect = self.__cmdqueue.pop().undo()
+        except NotImplementedError as error:
             print('Effect ', effect.__class__.__name__, 'cannot be undone')
-            self._cmdqueue.append(effect)
-            exit(1)
+            self.__cmdqueue.append(effect)
+            print(error)
+            return False
         return True
 
 effxdic = {}
@@ -204,18 +217,25 @@ class Amp:
     Amplifier class: Implements the **amplify** effect, a **Concrete command**,
     following the Command Design Pattern.
     """
-    def __init__(self, signal, gain, channels):
+    def __init__(self, signal, gain=-0.1, channels=None, **setup):
         """
         Create Amplifier effect:
             signal = image array which is being edited
             setup = gain and color(s) channel(s) [rgb]
         """
         try:
-            self.channels = channels
-            self.gain = gain
-        except:
-            print('Invalid Parameters')
-            exit(1)
+            if not gain == 0.1 and not channels == None:
+                self.channels = channels
+                self.gain = gain
+            elif len(setup) == 2:
+                self.channels = setup['channels']
+                self.gain = setup['gain']
+            else:
+                raise ValueError('Amp setup: gain(double) and channels (rgb)')
+        except (ValueError, KeyError) as error:
+            print('Invalid Amplifier parameters')
+            print(error)
+            return
         # Reference to image signal
         self.signal = signal
 
@@ -244,12 +264,22 @@ class Inv:
     Inversor class: Implements the **invert** effect, a concrete command,
     following the Command Design Pattern.
     """
-    def __init__(self, signal, channels):
+    def __init__(self, signal, channels=None, **setup):
         """
         Just set Inv.signal if it wasn't done before
         """
+        try:
+            if isinstance(channels, str):
+                self.chs = channels
+            elif channels == None and len(setup) == 1:
+                self.chs = setup['channels']
+            else:
+                raise AttributeError("Inv requires channels parameter, rgb")
+        except AttributeError as error:
+            print('Could not create Inv instance')
+            print('AttributeError:', error)
+            return
         self.signal = signal
-        self.chs = channels
 
     def execute(self):
         """
@@ -283,10 +313,11 @@ class GrayScale:
         """
         Removes green and blue color planes and saves
         that for an eventual undo
+        Returns the signal, due to new reference
         """
         self.recover = self.signal[:,:,1:2]
         self.signal = self.signal[:,:,0]
-        return True
+        return self.signal
 
     def undo(self):
         """
