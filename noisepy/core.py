@@ -37,15 +37,15 @@
 #  with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-colorChannel constant: Color dictionary for translating RGB to
+_color2ch constant: Color dictionary for translating RGB to
 the numpy array position
 """
-colorChannel = {'r' : 0, 'g' : 1, 'b' : 2}
+_color2ch = {'r' : 0, 'g' : 1, 'b' : 2}
 """
-maxColorValue constant: The maximum color int value which each
+_maxColVal constant: The maximum color int value which each
 pixel can assume.
 """
-maxColorValue = 255
+_maxColVal = 255
 
 """
 imageio: lib for handling images as numpy arrays
@@ -250,8 +250,8 @@ class Amp:
         by a factor of **gain**
         """
         for ch in self.channels:
-            self.signal[:,:,colorChannel[ch]] = \
-                    self.gain*self.signal[:,:,colorChannel[ch]]
+            self.signal[:,:,_color2ch[ch]] = \
+                    self.gain*self.signal[:,:,_color2ch[ch]]
         return True
 
     def undo(self):
@@ -259,8 +259,8 @@ class Amp:
         Amp.undo(): remove the gain added to the signal
         """
         for ch in self.channels:
-            self.signal[:,:,colorChannel[ch]] = \
-                    self.signal[:,:,colorChannel[ch]]/self.gain
+            self.signal[:,:,_color2ch[ch]] = \
+                    self.signal[:,:,_color2ch[ch]]/self.gain
         return True
 
 @regeffx
@@ -289,11 +289,11 @@ class Inv:
     def execute(self):
         """
         Inv.execute() concrete effect command: invert **channels** values:
-            maxColorValue(==255) - signal[:,:,channel]
+            _maxColVal(==255) - signal[:,:,channel]
         """
         for ch in self.chs:
-            self.signal[:,:,colorChannel[ch]] = \
-                    maxColorValue - self.signal[:,:,colorChannel[ch]]
+            self.signal[:,:,_color2ch[ch]] = \
+                    _maxColVal - self.signal[:,:,_color2ch[ch]]
         return True
 
     def undo(self):
