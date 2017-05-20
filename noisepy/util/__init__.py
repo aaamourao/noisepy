@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 #     ____ _     ___ _____ ____ _   _      _      ____    _____     _  _
 #    / ___| |   |_ _|_   _/ ___| | | |    / \    |  _ \  |_   _|  _| || |
 #   | |  _| |    | |  | || |   | |_| |   / _ \   | |_) |   | |   |_  ..  _|
@@ -18,7 +17,7 @@
 #    \  \:\       \  \:\        \__\/       \  \::/      \  \::/      \  \::/
 #     \__\/        \__\/                     \__\/        \__\/        \__\/
 #
-#  glitchefx.py -- This belongs to noisepy
+#  ./noisepy/util/__init__.py -- This belongs to noisepy
 #
 #  noisepy is a python module which implements methods for creating glitch art
 #  pictures and movies
@@ -37,16 +36,12 @@
 #  You should have received a copy of the GNU General Public License along
 #  with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from core import EffxBoard
+"""
+"""
+from .effx import *
+from .tools import *
 
-print("Initializing...")
-effects = EffxBoard("../images/barcelona.jpg")
-print("Creating effects...")
-effects.enqueue('Amp', gain=1.6, channels='g')
-effects.enqueue('Inv', channels='rb')
-effects.enqueue('GrayScale')
-print("Processing...")
-effects.executeQueue()
-print("Saving Image...")
-effects.save("../glitched/glitched_gs_barcelona.jpg")
-print("Done!")
+"""
+Controls all, *, importing
+"""
+__all__ = list(effxdic.keys()).append('effxdic')
