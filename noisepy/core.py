@@ -333,3 +333,8 @@ class GrayScale:
         """
         self.signal[:,:,1:3] = self.recover[1:3]
         return True
+
+"""
+Controls all, *, importing
+"""
+__all__ = list(effxdic.keys()).append('EffxHist')
