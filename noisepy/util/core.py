@@ -17,7 +17,7 @@
 #    \  \:\       \  \:\        \__\/       \  \::/      \  \::/      \  \::/
 #     \__\/        \__\/                     \__\/        \__\/        \__\/
 #
-#  glitchefx.py -- This belongs to noisepy
+#  ./noisepy/util/core.py -- This belongs to noisepy
 #
 #  noisepy is a python module which implements methods for creating glitch art
 #  pictures and movies
@@ -54,19 +54,19 @@ numpy: for complementary array operations
 import imageio
 import numpy
 
-class EffxHist:
+class EffxBoard:
     """
-    Effect History class: Implements the effect history, **the Invoker** class,
+    Effects Board class: Implements the effect history, **the Invoker** class,
     following the Command Design Pattern.
 
     Due to duck typing it is not necessary, or is unpythonic, creating an
-    abstract method to define an interface. Thus, EffxHist checks on runtime
+    abstract method to define an interface. Thus, EffxBoard checks on runtime
     if the given object is implemented concrete command.
     """
 
     def __init__(self, image, *, reverse=True):
         """
-        _glitchin: every instance of EffxHist has its own glitch image
+        _glitchin: every instance of EffxBoard has its own glitch image
         generated from the same or from a different source image.
 
         Obs.: 'image' might be a ndarray or a string containing the
@@ -92,7 +92,7 @@ class EffxHist:
             print(error)
             return
         """
-        __cmdqueue: every instance of EffxHist has its own command queue.
+        __cmdqueue: every instance of EffxBoard has its own command queue.
         """
         self.__cmdqueue = list()
         """
@@ -104,7 +104,7 @@ class EffxHist:
     @staticmethod
     def iseffect(defendant, *, reverse=True):
         """
-        EffxHist: static method that checks if an object is an effect, which
+        EffxBoard: static method that checks if an object is an effect, which
         should implement the command interface
         """
         try:
@@ -118,13 +118,13 @@ class EffxHist:
 
     def enqueue(self, effect, **setup):
         """
-        EffxHist:enqueue(): Append effect to the queue.
+        EffxBoard:enqueue(): Append effect to the queue.
         """
         try:
             if isinstance(effect, str):
                 print(setup)
                 self.__cmdqueue.append(effxdic[effect](self.signal, **setup))
-            elif not EffxHist.iseffect(effect, reverse=self.__reverse):
+            elif not EffxBoard.iseffect(effect, reverse=self.__reverse):
                 raise AttributeError("Only effects should be enqueued")
             else:
                 self.__cmdqueue.append(effect)
@@ -136,10 +136,10 @@ class EffxHist:
 
     def execute(self, effect, **setup):
         """
-        EffxHist:execute(): add effect and execute it
+        EffxBoard:execute(): add effect and execute it
         """
         try:
-            if EffxHist.iseffect(effect, reverse=self.__reverse):
+            if EffxBoard.iseffect(effect, reverse=self.__reverse):
                 effxobj = effect
             elif isinstance(effect, str):
                 if setup:
@@ -159,7 +159,7 @@ class EffxHist:
 
     def executeQueue(self):
         """
-        EffxHist:executeQueue(): Executes all the effects on the command queue.
+        EffxBoard:executeQueue(): Executes all the effects on the command queue.
         If some object doesn't has a execute method implemented, raises error.
         """
         # TODO: execute the non applyed effects from the queue
@@ -175,7 +175,7 @@ class EffxHist:
 
     def save(self, path='./glitched.jpg'):
         """
-        EffxHist:save(): Saves ignal with applied effects as an image file.
+        EffxBoard:save(): Saves ignal with applied effects as an image file.
         If path is not passed, the default, ./glitched.jpg, will be used.
         """
         self.currpath = path
@@ -195,7 +195,7 @@ class EffxHist:
 
     def undo(self):
         """
-        EffxHist:undo(): Undo the the last executed command on the queue,
+        EffxBoard:undo(): Undo the the last executed command on the queue,
         checking if each element has the undo operation implemented
         """
         try:
@@ -211,7 +211,7 @@ effxdic = {}
 def regeffx(effx):
     """
     regeffx: Decorator for registering effects which can be created by
-    an EffxHist instance by saving it on a dictionary.
+    an EffxBoard instance by saving it on a dictionary.
     """
     effxdic[effx.__name__] = effx
     return effx
@@ -337,4 +337,4 @@ class GrayScale:
 """
 Controls all, *, importing
 """
-__all__ = list(effxdic.keys()).append('EffxHist')
+__all__ = list(effxdic.keys()).append('EffxBoard')
