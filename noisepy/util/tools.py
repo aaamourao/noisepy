@@ -56,5 +56,5 @@ def _regeffx(effx):
     _regeffx: Decorator for registering effects which can be created by
     an EffxBoard instance by saving it on a dictionary.
     """
-    effxdic[effx.__name__] = effx
+    effxdic[effx.__name__.lower()] = effx
     return effx
